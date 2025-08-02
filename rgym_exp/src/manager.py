@@ -234,7 +234,7 @@ class SystemMemoryMonitor:
             # 3. Nuclear garbage collection
             total_collected = 0
             for generation in [2, 1, 0]:
-                for _ in range(50):  # 50 cycles per generation
+                for _ in range(10):  # Reduced from 50 to 10
                     collected = gc.collect(generation)
                     total_collected += collected
                     if collected == 0:
@@ -248,10 +248,10 @@ class SystemMemoryMonitor:
                     
                     # Massive malloc_trim
                     libc = ctypes.CDLL("libc.so.6")
-                    for _ in range(200):  # 200 malloc_trim calls
+                    for _ in range(50):  # Reduced from 200 to 50
                         libc.malloc_trim(0)
-                        if _ % 50 == 49:
-                            time.sleep(0.01)  # Brief pause every 50 calls
+                        if _ % 10 == 9:
+                            time.sleep(0.01)  # Brief pause every 10 calls
                     
                     # Try to drop caches (requires root, but try anyway)
                     try:
@@ -325,9 +325,9 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
         self.last_memory_cleanup = time.time()
         self.last_rewards_cleanup = time.time()
         
-        # Memory thresholds
-        self.process_memory_threshold = 10.0  # 10GB process memory
-        self.nuclear_process_threshold = 15.0  # 15GB nuclear cleanup
+        # Memory thresholds - increased to be less aggressive
+        self.process_memory_threshold = 12.0  # 12GB process memory
+        self.nuclear_process_threshold = 18.0  # 18GB nuclear cleanup
         
         # Training state
         self.training_active = True
@@ -361,10 +361,10 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
         self.hf_push_frequency = hf_push_frequency
         self._setup_huggingface(model_name)
 
-        # Blockchain submission
+        # Blockchain submission - Fixed frequency
         self.batched_signals = 0.0
         self.time_since_submit = time.time()
-        self.submit_period = 1.0  # hours
+        self.submit_period = 1.0  # 6 minutes instead of 1 hour
         self.submitted_this_round = False
 
         # Setup emergency handlers
@@ -513,17 +513,17 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
         return False
 
     def _nuclear_manager_cleanup(self):
-        """Nuclear manager-level cleanup"""
+        """Nuclear manager-level cleanup - Less aggressive"""
         try:
             get_logger().error(f"{Fore.RED}💥 [NUCLEAR MANAGER] Nuclear cleanup initiated{Style.RESET_ALL}")
             
             initial_memory = self._get_process_memory_gb()
             
-            # 1. Clear rewards history aggressively
-            self._nuclear_rewards_cleanup()
+            # 1. Clear only old rewards history (keep recent)
+            self._safe_rewards_cleanup()
             
             # 2. Clear communication buffers
-            self._nuclear_communication_cleanup()
+            self._safe_communication_cleanup()
             
             # 3. Clear trainer caches
             if hasattr(self.trainer, 'cleanup'):
@@ -533,8 +533,8 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             if hasattr(self.data_manager, 'cleanup'):
                 self.data_manager.cleanup()
             
-            # 5. Clear game state trees
-            self._nuclear_gamestate_cleanup()
+            # 5. Clear only old game state trees
+            self._safe_gamestate_cleanup()
             
             # 6. System-level cleanup
             self.system_monitor._nuclear_system_cleanup()
@@ -548,68 +548,6 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             
         except Exception as e:
             get_logger().error(f"Nuclear manager cleanup failed: {e}")
-
-    def _nuclear_rewards_cleanup(self):
-        """Nuclear cleanup of rewards history"""
-        try:
-            # Clear all rewards history
-            if hasattr(self, 'rewards'):
-                self.rewards.clear()
-            
-            # Clear reward manager caches
-            if hasattr(self.reward_manager, '_cached_rewards'):
-                self.reward_manager._cached_rewards.clear()
-            
-            # Clear any reward computation caches
-            if hasattr(self.reward_manager, 'reward_fn_store'):
-                if hasattr(self.reward_manager.reward_fn_store, 'cache'):
-                    self.reward_manager.reward_fn_store.cache.clear()
-            
-            get_logger().info(f"{Fore.CYAN}🧹 [NUCLEAR] Rewards history cleared{Style.RESET_ALL}")
-            
-        except Exception as e:
-            get_logger().debug(f"Nuclear rewards cleanup failed: {e}")
-
-    def _nuclear_communication_cleanup(self):
-        """Nuclear cleanup of communication buffers"""
-        try:
-            # Clear communication buffers
-            if hasattr(self.communication, '_buffers'):
-                self.communication._buffers.clear()
-            
-            # Clear peer references
-            if hasattr(self.communication, '_peer_refs'):
-                self.communication._peer_refs.clear()
-            
-            # Clear DHT caches
-            if hasattr(self.communication, 'dht'):
-                if hasattr(self.communication.dht, '_cache'):
-                    self.communication.dht._cache.clear()
-            
-            get_logger().info(f"{Fore.CYAN}🧹 [NUCLEAR] Communication buffers cleared{Style.RESET_ALL}")
-            
-        except Exception as e:
-            get_logger().debug(f"Nuclear communication cleanup failed: {e}")
-
-    def _nuclear_gamestate_cleanup(self):
-        """Nuclear cleanup of game state"""
-        try:
-            # Clear game trees
-            if hasattr(self.state, 'trees'):
-                self.state.trees.clear()
-            
-            # Clear any cached states
-            if hasattr(self.state, '_cached_states'):
-                self.state._cached_states.clear()
-            
-            # Clear world state caches
-            if hasattr(self.state, '_world_state_cache'):
-                self.state._world_state_cache.clear()
-            
-            get_logger().info(f"{Fore.CYAN}🧹 [NUCLEAR] Game state cleared{Style.RESET_ALL}")
-            
-        except Exception as e:
-            get_logger().debug(f"Nuclear gamestate cleanup failed: {e}")
 
     def _enhanced_manager_cleanup(self):
         """Enhanced manager cleanup for high memory situations"""
@@ -634,9 +572,9 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
     def _safe_rewards_cleanup(self):
         """Safe rewards cleanup that preserves recent data"""
         try:
-            if hasattr(self, 'rewards') and len(self.rewards) > 10:
-                # Keep only recent 10 rounds
-                recent_keys = list(self.rewards.keys())[-10:]
+            if hasattr(self, 'rewards') and len(self.rewards) > 20:
+                # Keep only recent 20 rounds instead of 10
+                recent_keys = list(self.rewards.keys())[-20:]
                 old_rewards = dict(self.rewards)
                 self.rewards.clear()
                 
@@ -644,7 +582,7 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
                     if key in old_rewards:
                         self.rewards[key] = old_rewards[key]
                 
-                get_logger().info(f"{Fore.CYAN}🧹 [SAFE] Rewards trimmed to recent 10 rounds{Style.RESET_ALL}")
+                get_logger().info(f"{Fore.CYAN}🧹 [SAFE] Rewards trimmed to recent 20 rounds{Style.RESET_ALL}")
                 
         except Exception as e:
             get_logger().debug(f"Safe rewards cleanup failed: {e}")
@@ -676,9 +614,9 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
                     agent_trees = self.state.trees[agent]
                     if isinstance(agent_trees, dict):
                         # Clear old batches, keep recent
-                        if len(agent_trees) > 5:  # Keep only 5 most recent
+                        if len(agent_trees) > 10:  # Keep only 10 most recent instead of 5
                             batch_keys = list(agent_trees.keys())
-                            for old_batch in batch_keys[:-5]:
+                            for old_batch in batch_keys[:-10]:
                                 del agent_trees[old_batch]
                 
         except Exception as e:
@@ -690,7 +628,7 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             # Garbage collection
             total_collected = 0
             for generation in [2, 1, 0]:
-                for _ in range(5):
+                for _ in range(3):  # Reduced from 5 to 3
                     collected = gc.collect(generation)
                     total_collected += collected
                     if collected == 0:
@@ -700,7 +638,7 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             if sys.platform.startswith('linux'):
                 try:
                     libc = ctypes.CDLL("libc.so.6")
-                    for _ in range(20):
+                    for _ in range(10):  # Reduced from 20 to 10
                         libc.malloc_trim(0)
                 except:
                     pass
@@ -731,15 +669,14 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
         return rewards_by_agent
 
     def _get_my_rewards(self, signal_by_agent):
-        """Get rewards for this agent"""
+        """Get rewards for this agent - Fixed logic"""
         if len(signal_by_agent) == 0:
             return 0
+        
         if self.peer_id in signal_by_agent:
-            my_signal = signal_by_agent[self.peer_id]
+            return signal_by_agent[self.peer_id]  # Return actual signal value
         else:
-            my_signal = 0
-        my_signal = (my_signal + 1) * (my_signal > 0) + my_signal * (my_signal <= 0)
-        return my_signal
+            return 0
 
     def _try_submit_to_chain(self, signal_by_agent):
         """Try to submit rewards to blockchain with enhanced logging"""
@@ -831,9 +768,9 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             
             self._try_submit_to_chain(signal_by_agent)
             
-            # Memory management after rewards
+            # Memory management after rewards - Less frequent
             current_time = time.time()
-            if current_time - self.last_rewards_cleanup > 300:  # Every 5 minutes
+            if current_time - self.last_rewards_cleanup > 600:  # Every 10 minutes instead of 5
                 self._check_process_memory_emergency(" - REWARDS")
                 self.last_rewards_cleanup = current_time
                 
@@ -860,7 +797,7 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
         
         self.submitted_this_round = False
 
-        # Memory management schedule
+        # Memory management schedule - Less aggressive
         try:
             # Check process memory
             memory_emergency = self._check_process_memory_emergency(" - ROUND END")
@@ -869,11 +806,11 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             gc.collect()
             
             # Enhanced cleanup schedule based on memory pressure
-            if memory_emergency or self.round_counter % 5 == 0:
+            if memory_emergency or self.round_counter % 10 == 0:  # Every 10 rounds instead of 5
                 self._enhanced_manager_cleanup()
                 
-            # Nuclear cleanup for extreme cases
-            if self.round_counter % 25 == 0:
+            # Nuclear cleanup for extreme cases - Much less frequent
+            if self.round_counter % 100 == 0:  # Every 100 rounds instead of 25
                 get_logger().info(f"{Fore.RED}💥 [NUCLEAR SCHEDULE] Round {self.round_counter} - Nuclear cleanup{Style.RESET_ALL}")
                 self._nuclear_manager_cleanup()
                 
@@ -893,7 +830,7 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             )
             
             # Final cleanup
-            self._nuclear_manager_cleanup()
+            self._enhanced_manager_cleanup()  # Use enhanced instead of nuclear for final cleanup
             
             # Stop monitoring
             self.system_monitor.stop_monitoring()
@@ -972,8 +909,8 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
                 check_backoff = check_interval
                 self.state.round = round_num
                 
-                # Light cleanup before returning
-                if self.agent_block_counter % 50 == 0:
+                # Light cleanup before returning - Less frequent
+                if self.agent_block_counter % 100 == 0:  # Every 100 blocks instead of 50
                     gc.collect()
                     get_logger().debug(
                         f"{Fore.CYAN}🧹 Agent block cleanup #{self.agent_block_counter}{Style.RESET_ALL}"
@@ -1003,6 +940,6 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
         try:
             if hasattr(self, 'system_monitor'):
                 self.system_monitor.stop_monitoring()
-            self._nuclear_manager_cleanup()
+            self._enhanced_manager_cleanup()  # Use enhanced instead of nuclear for destructor
         except:
             pass
