@@ -142,7 +142,7 @@ pip install trl
 pip install vllm==0.7.3
 pip install bitsandbytes 
 pip install hivemind@git+https://github.com/gensyn-ai/hivemind@639c964a8019de63135a2594663b5bec8e5356dd
-
+pip install colorama psutil 
 # Copy default config if needed
 if [ ! -d "$ROOT/configs" ]; then
     mkdir "$ROOT/configs"
@@ -168,10 +168,10 @@ else
 fi
 
 # ✅ KEY FIX: Restored the interactive prompt for model selection as requested.
-echo -en $GREEN_TEXT
-read -p ">> Enter the name of the model you want to use in huggingface repo/name format, or press [Enter] to use the default model. " MODEL_NAME
-echo -en $RESET_TEXT
-
+# echo -en $GREEN_TEXT
+# read -p ">> Enter the name of the model you want to use in huggingface repo/name format, or press [Enter] to use the default model. " MODEL_NAME
+# echo -en $RESET_TEXT
+MODEL_NAME="Gensyn/Qwen2.5-1.5B-Instruct"
 # Only export MODEL_NAME if user provided a non-empty value
 if [ -n "$MODEL_NAME" ]; then
     export MODEL_NAME
