@@ -9,7 +9,7 @@ training:
 
   # Set to 'true' to enable mixed-precision training.
   # The python code is configured to use stable 'bfloat16' on compatible GPUs.
-  fp16: false
+  fp16: true
 
   max_round: 1000000
   max_stage: 1
@@ -83,7 +83,7 @@ game_manager:
       _target_: trl.trainer.GRPOConfig
       logging_dir: ${log_dir}
       fp16: ${training.fp16}
-      gradient_checkpointing: false
+      gradient_checkpointing: true
       max_completion_length: 512
 
     log_with: wandb
@@ -98,7 +98,7 @@ game_manager:
     yaml_config_path: "rgym_exp/src/datasets.yaml"
     
     # This now acts as the training batch size.
-    num_train_samples: 2 # Increase for better performance
+    num_train_samples: 3 # Increase for better performance
     
     num_evaluation_samples: 0
     system_prompt_id: 'default'
