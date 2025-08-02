@@ -154,18 +154,7 @@ fi
 echo_green ">> Setup complete!"
 
 # Handle Hugging Face token
-HF_TOKEN=${HF_TOKEN:-""}
-if [ -z "${HF_TOKEN}" ]; then
-    echo -en $GREEN_TEXT
-    read -p ">> Would you like to push models to the Hugging Face Hub? [y/N] " yn
-    echo -en $RESET_TEXT
-    case ${yn:-N} in
-        [Yy]*) read -p "Enter your Hugging Face access token: " HUGGINGFACE_ACCESS_TOKEN ;;
-        *) HUGGINGFACE_ACCESS_TOKEN="None" ;;
-    esac
-else
-    HUGGINGFACE_ACCESS_TOKEN=${HF_TOKEN}
-fi
+HUGGINGFACE_ACCESS_TOKEN="None"
 
 # ✅ KEY FIX: Restored the interactive prompt for model selection as requested.
 # echo -en $GREEN_TEXT
