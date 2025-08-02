@@ -150,7 +150,7 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
         # Blockchain submission
         self.batched_signals = 0.0
         self.time_since_submit = time.time()  # seconds
-        self.submit_period = 3.0  # hours
+        self.submit_period = 1.0  # hours
         self.submitted_this_round = False
         
         # Round counter for logging
