@@ -110,7 +110,10 @@ game_manager:
     initial_peers: ${communications.initial_peers}
     identity_path: ${oc.env:IDENTITY_PATH,null}
     startup_timeout: 120
-    beam_size: 50
+    beam_size: 10
+    disable_caching: true
+    cache_locally: false
+    cache_on_store: false
 
   coordinator:
     _target_: genrl.blockchain.coordinator.ModalSwarmCoordinator
