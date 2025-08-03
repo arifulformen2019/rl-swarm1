@@ -279,7 +279,7 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             if not hasattr(self, '_last_waiting_log'):
                 self._last_waiting_log = 0
             
-            if time.time() - self._last_waiting_log > 1800:  # 30 minutes
+            if time.time() - self._last_waiting_log > 900:  # 30 minutes
                 get_logger().info(
                     f"{Fore.YELLOW}⏳ [WAITING] Next submit in: {remaining_minutes:.0f} minutes | "
                     f"Current points: {int(self.batched_signals)} | Agent: {self.animal_name}{Style.RESET_ALL}"
