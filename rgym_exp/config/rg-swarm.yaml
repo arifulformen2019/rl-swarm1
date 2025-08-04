@@ -30,7 +30,12 @@ blockchain:
 communications:
   initial_peers:
     - '/ip4/38.101.215.12/tcp/30011/p2p/QmQ2gEXoPJg6iMBSUFWGzAabS2VhnzuS782Y637hGjfsRJ'
-
+  # ✅ NEW: Memory management settings  
+  memory_limits:
+    max_memory_mb: 6144  # 2GB max memory per worker
+    max_object_size: 52428800  # 50MB max object size
+    max_buffer_size: 104857600  # 100MB buffer size
+    max_cache_bytes: 209715200  # 200MB cache size
 # --- Evaluation Settings ---
 eval:
   judge_base_url: https://swarm-judge-102957787771.us-east1.run.app
@@ -73,7 +78,8 @@ game_manager:
     # ✅ CORRECTED: Restored dynamic model selection.
     # It will use the MODEL_NAME env var, or otherwise auto-select from the pools below.
     models:
-      - ${oc.env:MODEL_NAME, ${gpu_model_choice:${default_large_model_pool},${default_small_model_pool}}}
+      - _target_: transformers.AutoModelForCausalLM.from_pretrained
+        pretrained_model_name_or_path: ${oc.env:MODEL_NAME, ${gpu_model_choice:${default_large_model_pool},${default_small_model_pool}}}
 
     use_vllm: ${training.use_vllm}
 
@@ -82,7 +88,7 @@ game_manager:
       logging_dir: ${log_dir}
       fp16: ${training.fp16}
       gradient_checkpointing: true
-      max_completion_length: 256
+      max_completion_length: 512
 
     log_with: wandb
     log_dir: ${log_dir}
@@ -108,16 +114,16 @@ game_manager:
     initial_peers: ${communications.initial_peers}
     identity_path: ${oc.env:IDENTITY_PATH,null}
     timeout: 120
-    startup_timeout: 60
     beam_size: 10
     disable_caching: true
     cache_locally: false
     cache_on_store: false
-    host_maddrs: ["/ip4/0.0.0.0/tcp/0"]
-    use_relay: false
-    use_auto_relay: false
-    wait_timeout: 30
-
+    max_memory_mb: ${communications.memory_limits.max_memory_mb}
+    max_object_size: ${communications.memory_limits.max_object_size}
+    max_buffer_size: ${communications.memory_limits.max_buffer_size}
+    max_cache_bytes: ${communications.memory_limits.max_cache_bytes}
+    cleanup_interval: 30
+    
   coordinator:
     _target_: genrl.blockchain.coordinator.ModalSwarmCoordinator
     web3_url: ${blockchain.alchemy_url}
