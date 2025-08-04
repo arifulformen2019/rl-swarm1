@@ -30,6 +30,7 @@ blockchain:
 communications:
   initial_peers:
     - '/ip4/38.101.215.12/tcp/30011/p2p/QmQ2gEXoPJg6iMBSUFWGzAabS2VhnzuS782Y637hGjfsRJ'
+    - '/ip4/38.101.215.13/tcp/30012/p2p/QmWhiaLrx3HRZfgXc2i7KW5nMUNK7P9tRc71yFJdGEZKkC'
   # ✅ NEW: Memory management settings  
   memory_limits:
     max_memory_mb: 6144  # 2GB max memory per worker
