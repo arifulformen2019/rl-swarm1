@@ -30,8 +30,6 @@ blockchain:
 communications:
   initial_peers:
     - '/ip4/38.101.215.12/tcp/30011/p2p/QmQ2gEXoPJg6iMBSUFWGzAabS2VhnzuS782Y637hGjfsRJ'
-    - '/ip4/38.101.215.13/tcp/30012/p2p/QmWhiaLrx3HRZfgXc2i7KW5nMUNK7P9tRc71yFJdGEZKkC'
-    - '/ip4/38.101.215.14/tcp/30013/p2p/QmQa1SCfYTxx7RvU7qJJRo79Zm1RAwPpkeLueDVJuBBmFp'
 
 # --- Evaluation Settings ---
 eval:
@@ -84,7 +82,7 @@ game_manager:
       logging_dir: ${log_dir}
       fp16: ${training.fp16}
       gradient_checkpointing: true
-      max_completion_length: 512
+      max_completion_length: 256
 
     log_with: wandb
     log_dir: ${log_dir}
@@ -109,11 +107,16 @@ game_manager:
     _target_: genrl.communication.hivemind.hivemind_backend.HivemindBackend
     initial_peers: ${communications.initial_peers}
     identity_path: ${oc.env:IDENTITY_PATH,null}
-    startup_timeout: 120
+    timeout: 120
+    startup_timeout: 60
     beam_size: 10
     disable_caching: true
     cache_locally: false
     cache_on_store: false
+    host_maddrs: ["/ip4/0.0.0.0/tcp/0"]
+    use_relay: false
+    use_auto_relay: false
+    wait_timeout: 30
 
   coordinator:
     _target_: genrl.blockchain.coordinator.ModalSwarmCoordinator
