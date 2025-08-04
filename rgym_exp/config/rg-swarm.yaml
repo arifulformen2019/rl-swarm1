@@ -33,10 +33,10 @@ communications:
     - '/ip4/38.101.215.13/tcp/30012/p2p/QmWhiaLrx3HRZfgXc2i7KW5nMUNK7P9tRc71yFJdGEZKkC'
   # ✅ NEW: Memory management settings  
   memory_limits:
-    max_memory_mb: 6144  # 2GB max memory per worker
-    max_object_size: 52428800  # 50MB max object size
-    max_buffer_size: 104857600  # 100MB buffer size
-    max_cache_bytes: 209715200  # 200MB cache size
+    max_memory_mb: 12288  # 2GB max memory per worker
+    max_object_size: 134217728  # 50MB max object size
+    max_buffer_size: 268435456  # 100MB buffer size
+    max_cache_bytes: 536870912  # 200MB cache size
 # --- Evaluation Settings ---
 eval:
   judge_base_url: https://swarm-judge-102957787771.us-east1.run.app
@@ -102,7 +102,7 @@ game_manager:
     yaml_config_path: "rgym_exp/src/datasets.yaml"
     
     # This now acts as the training batch size.
-    num_train_samples: 3 # Increase for better performance
+    num_train_samples: 4 # Increase for better performance
     
     num_evaluation_samples: 0
     system_prompt_id: 'default'
@@ -114,7 +114,7 @@ game_manager:
     initial_peers: ${communications.initial_peers}
     identity_path: ${oc.env:IDENTITY_PATH,null}
     timeout: 120
-    beam_size: 10
+    beam_size: 15
     disable_caching: true
     cache_locally: false
     cache_on_store: false
