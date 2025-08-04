@@ -9,7 +9,7 @@ training:
 
   # Set to 'true' to enable mixed-precision training.
   # The python code is configured to use stable 'bfloat16' on compatible GPUs.
-  fp16: true
+  fp16: false
 
   max_round: 1000000
   max_stage: 1
@@ -79,8 +79,7 @@ game_manager:
     # ✅ CORRECTED: Restored dynamic model selection.
     # It will use the MODEL_NAME env var, or otherwise auto-select from the pools below.
     models:
-      - _target_: transformers.AutoModelForCausalLM.from_pretrained
-        pretrained_model_name_or_path: ${oc.env:MODEL_NAME, ${gpu_model_choice:${default_large_model_pool},${default_small_model_pool}}}
+      - ${oc.env:MODEL_NAME, ${gpu_model_choice:${default_large_model_pool},${default_small_model_pool}}}
 
     use_vllm: ${training.use_vllm}
 
@@ -133,8 +132,7 @@ game_manager:
     modal_proxy_url: ${blockchain.modal_proxy_url}
     
 default_large_model_pool: 
-  - nvidia/AceInstruct-1.5B
-  - dnotitia/Smoothie-Qwen3-1.7B
+  - nvidia/Nemotron-Research-Reasoning-Qwen-1.5B
   - Gensyn/Qwen2.5-1.5B-Instruct
 
 default_small_model_pool:
