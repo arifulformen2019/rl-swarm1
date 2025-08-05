@@ -14,7 +14,7 @@ training:
   max_round: 1000000
   max_stage: 1
   hf_push_frequency: 1
-  num_generations: 3
+  num_generations: 4
   num_transplant_trees: 2
   seed: 42
 
