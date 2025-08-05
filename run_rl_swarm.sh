@@ -162,7 +162,7 @@ HUGGINGFACE_ACCESS_TOKEN="None"
 # echo -en $RESET_TEXT
 #MODEL_NAME="Gensyn/Qwen2.5-1.5B-Instruct"
 # Only export MODEL_NAME if user provided a non-empty value
-MODEL_NAME=""
+MODEL_NAME="Qwen/Qwen2.5-3B-Instruct"
 if [ -n "$MODEL_NAME" ]; then
     export MODEL_NAME
     echo_green ">> Using model: $MODEL_NAME"
