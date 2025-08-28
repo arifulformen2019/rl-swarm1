@@ -170,31 +170,71 @@ export default function Home() {
     }
   }, []);
 
-  return (
-    <main className="flex min-h-screen flex-col items-center gap-4 justify-center text-center">
-      {(!sawDisconnected && !sawConnected) || (user && !createdApiKey) ? (
-        <>Loading...</>
-      ) : user ? (
-        <div className="card">
-          <div className="flex flex-col gap-2 p-2">
-            <p className="text-xl font-bold">
-              YOU ARE SUCCESSFULLY LOGGED IN TO THE GENSYN TESTNET
-            </p>
-            <button className="btn btn-primary mt-6" onClick={() => logout()}>
+  const Login = () => {
+    return (
+      <>
+        <div className="block mt-8">
+          <p className="font-auxmono text-md text-black bg-gensyn-pink inline uppercase">
+            Sign in to the Gensyn Testnet
+          </p>
+        </div>
+
+        <div className="block">
+            <button className="btn bg-gensyn-pink text-black px-8 py-4 uppercase font-auxmono" onClick={openAuthModal}>
+              Sign in
+            </button>
+        </div>
+      </>
+    )
+  }
+
+  const Loading = () => {
+    return (
+      <h1 className="inline bg-gensyn-pink font-mondwest text-6xl text-black">Loading...</h1>
+    )
+  }
+
+  const Logout = () => {
+    return (
+      <>
+        <div className="block mt-8">
+          <p className="font-auxmono text-md text-black bg-gensyn-pink inline uppercase">
+            You are successfully logged in to the Gensyn Testnet.
+          </p>
+        </div>
+        <div className="block">
+            <button className="btn bg-gensyn-pink text-black px-8 py-4 uppercase font-auxmono" onClick={() => logout()}>
               Log out
             </button>
-          </div>
         </div>
-      ) : (
-        <div className="card">
-          <p className="text-xl font-bold">LOGIN TO THE GENSYN TESTNET</p>
-          <div className="flex flex-col gap-2 p-2">
-            <button className="btn btn-primary mt-6" onClick={openAuthModal}>
-              Login
-            </button>
-          </div>
+      </>
+    )
+  }
+
+  return (
+    <main style={{ backgroundImage: "url('/images/login.png')" }} className="bg-cover bg-center h-screen w-screen flex items-end justify-start">
+      <section className="px-16 pb-16">
+        <img src="/images/logo.gif" alt="A spinning Gensyn logo" className="h-20" />
+
+        <div className="block mt-8">
+          <span className="mb-4 w-1/2 text-nowrap overflow-hidden block tracking-widest font-simplon text-md text-gensyn-pink uppercase">
+            * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+          </span>
+          <h1 className="inline bg-gensyn-pink font-mondwest text-6xl text-black">Welcome to the Gensyn Testnet</h1>
         </div>
-      )}
+
+        {(!sawDisconnected && !sawConnected) || (user && !createdApiKey) ? (
+          <Loading />
+        ) : user ? (
+          <Logout />
+        ) : (
+          <Login />
+        )}
+
+        <span className="mt-4 w-1/2 text-nowrap overflow-hidden block tracking-widest font-simplon text-md text-gensyn-pink uppercase">
+          * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+        </span>
+      </section>
     </main>
-  );
+  )
 }
