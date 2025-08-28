@@ -3,20 +3,14 @@ log_dir: ${oc.env:ROOT,.}/logs
 
 # --- Core Training & Mode Settings ---
 training:
-  # Set to 'false' to enable training mode.
-  # Set to 'true' for fast inference-only mode using vLLM.
   use_vllm: false
-
-  # Set to 'true' to enable mixed-precision training.
-  # The python code is configured to use stable 'bfloat16' on compatible GPUs.
-  fp16: false
-
   max_round: 1000000
   max_stage: 1
   hf_push_frequency: 1
-  num_generations: 4
+  num_generations: 2
   num_transplant_trees: 2
   seed: 42
+  dtype: 'float32'
 
 # --- Blockchain and Swarm Coordinator Settings ---
 blockchain:
@@ -25,8 +19,14 @@ blockchain:
   org_id: ${oc.env:ORG_ID,null}
   mainnet_chain_id: 685685
   modal_proxy_url: "http://localhost:3000/api/"
+  swarm_coordinator_abi_path: "rgym_exp/contracts/SwarmCoordinator_0.4.2.json"
 
 # --- P2P Communication Settings ---
+prg_game_config:
+  prg_game: ${oc.env:PRG_GAME,null}
+  org_id: ${blockchain.org_id}
+  modal_proxy_url: ${blockchain.modal_proxy_url}
+  
 communications:
   initial_peers:
     - '/ip4/38.101.215.12/tcp/30011/p2p/QmQ2gEXoPJg6iMBSUFWGzAabS2VhnzuS782Y637hGjfsRJ'
@@ -40,12 +40,18 @@ communications:
     max_cache_bytes: 671088640  # 200MB cache size
 # --- Evaluation Settings ---
 eval:
-  judge_base_url: https://swarm-judge-102957787771.us-east1.run.app
+  judge_base_url: "https://swarm-judge.internal-apps-central1.clusters.gensyn.ai"
 
 # --- Hydra Configuration ---
 hydra:
   run:
     dir: ${log_dir}
+  job_logging:
+    handlers:
+      console:
+        level: INFO
+    root:
+      level: DEBUG
 
 # --- Main Game Manager Setup ---
 game_manager:
@@ -57,7 +63,7 @@ game_manager:
   hf_push_frequency: ${training.hf_push_frequency}
   run_mode: "train_and_evaluate"
   bootnodes: ${communications.initial_peers}
-
+  prg_game_config: ${prg_game_config}
   game_state: 
     _target_: genrl.state.game_state.GameState
     round: 0
@@ -85,27 +91,24 @@ game_manager:
     use_vllm: ${training.use_vllm}
 
     config:
-      _target_: trl.trainer.GRPOConfig
-      logging_dir: ${log_dir}
-      fp16: ${training.fp16}
+      _target_: genrl.trainer.grpo_trainer.GRPOTrainerConfig
+      dtype: ${training.dtype}
+      epsilon: 0.2
+      epsilon_high: 0.28
+      num_generations: ${training.num_generations}
       gradient_checkpointing: false
       max_completion_length: 1024
 
     log_with: wandb
     log_dir: ${log_dir}
-    epsilon: 0.2
-    epsilon_high: 0.28
-    num_generations: ${training.num_generations}
     judge_base_url: ${eval.judge_base_url}
   
   data_manager:
     _target_: rgym_exp.src.data.ReasoningGymDataManager
     yaml_config_path: "rgym_exp/src/datasets.yaml"
-    
-    # This now acts as the training batch size.
     num_train_samples: 4 # Increase for better performance
-    
     num_evaluation_samples: 0
+    num_generations: ${training.num_generations}
     system_prompt_id: 'default'
     seed: ${training.seed}
     num_transplant_trees: ${training.num_transplant_trees}
@@ -132,7 +135,7 @@ game_manager:
     contract_address: ${blockchain.contract_address}
     org_id: ${blockchain.org_id}
     modal_proxy_url: ${blockchain.modal_proxy_url}
-    
+    swarm_coordinator_abi_json: ${blockchain.swarm_coordinator_abi_path}
 default_large_model_pool: 
   - nvidia/Nemotron-Research-Reasoning-Qwen-1.5B
   - Gensyn/Qwen2.5-1.5B-Instruct
