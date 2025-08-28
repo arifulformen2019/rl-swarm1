@@ -18,6 +18,7 @@ type UserOperationHandlerRequest = {
   initCode: Hex;
   functionName: string;
   args: unknown[];
+  contract?: any;
 };
 
 /**
@@ -31,6 +32,7 @@ export async function userOperationHandler({
   initCode,
   functionName,
   args,
+  contract: contractOverride,
 }: UserOperationHandlerRequest): Promise<NextResponse> {
   const transport = alchemy({
     apiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY!,
@@ -52,7 +54,9 @@ export async function userOperationHandler({
     policyId: process.env.NEXT_PUBLIC_PAYMASTER_POLICY_ID!,
   });
 
-  const contractAddress = process.env.SMART_CONTRACT_ADDRESS! as `0x${string}`;
+  // Allow contract override for PRG endpoints
+  const contractObj = contractOverride || contract;
+  const contractAddress = contractObj.address || process.env.SWARM_CONTRACT_ADDRESS! as `0x${string}`;
 
   console.log(contractAddress);
 
@@ -62,7 +66,7 @@ export async function userOperationHandler({
         uo: {
           target: contractAddress,
           data: encodeFunctionData({
-            abi: contract.abi,
+            abi: contractObj.abi,
             functionName,
             args,
           }),
@@ -141,7 +145,7 @@ export async function userOperationHandler({
       try {
         const decodedError = decodeErrorResult({
           data: revertData,
-          abi: contract.abi,
+          abi: contractObj.abi,
         });
 
         console.error(
