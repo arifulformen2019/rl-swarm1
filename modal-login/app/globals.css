@@ -8,6 +8,29 @@
   --background-end-rgb: 255, 255, 255;
 }
 
+@font-face {
+  font-family: "AuxMono";
+  src: url("/fonts/AuxMono/Webfont/Aux Mono.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Mondwest";
+  src: url("/fonts/Mondwest/Mondwest-Regular.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  text-rendering: optimizeLegibility;
+}
+
+@font-face {
+  font-family: "Simplon";
+  src: url("/fonts/Simplon/SimplonMono-Light-WebS.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  text-rendering: optimizeLegibility;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -88,10 +111,4 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-}
-@font-face {
-  font-family: "AuxMono";
-  src: url("/fonts/Aux Mono.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
 }
