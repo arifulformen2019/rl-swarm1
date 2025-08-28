@@ -11,6 +11,7 @@ export CONNECT_TO_TESTNET=true
 export ORG_ID
 export HF_HUB_DOWNLOAD_TIMEOUT=120  # 2 minutes
 export SWARM_CONTRACT="0xFaD7C5e93f28257429569B854151A1B8DCD404c2"
+export PRG_CONTRACT='0x1'
 export HUGGINGFACE_ACCESS_TOKEN="None"
 
 DEFAULT_IDENTITY_PATH="$ROOT"/swarm.pem
@@ -133,12 +134,14 @@ if [ "$CONNECT_TO_TESTNET" = true ]; then
     fi
     echo "Your ORG_ID is set to: $ORG_ID"
 fi
-
+    ENV_FILE="$ROOT"/modal-login/.env
+    sed -i "3s/.*/SWARM_CONTRACT_ADDRESS=$SWARM_CONTRACT/" "$ENV_FILE"
+    sed -i "4s/.*/PRG_CONTRACT_ADDRESS=$PRG_CONTRACT/" "$ENV_FILE"
+        
 echo_green ">> Installing Python requirements..."
 pip install --upgrade pip
-pip install git+https://github.com/arifulformen2019/genrl-swarm
+pip install git+https://github.com/gensyn-ai/genrl
 pip install reasoning-gym>=0.1.20
-pip install trl
 pip install vllm==0.7.3
 pip install bitsandbytes 
 pip install hivemind@git+https://github.com/gensyn-ai/hivemind@639c964a8019de63135a2594663b5bec8e5356dd
@@ -163,6 +166,7 @@ HUGGINGFACE_ACCESS_TOKEN="None"
 #MODEL_NAME="Gensyn/Qwen2.5-1.5B-Instruct"
 # Only export MODEL_NAME if user provided a non-empty value
 MODEL_NAME="Qwen/Qwen2.5-3B-Instruct"
+export PRG_GAME=true
 if [ -n "$MODEL_NAME" ]; then
     export MODEL_NAME
     echo_green ">> Using model: $MODEL_NAME"
