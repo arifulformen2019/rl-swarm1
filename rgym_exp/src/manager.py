@@ -20,6 +20,7 @@ from genrl.trainer import TrainerModule
 from huggingface_hub import login, whoami
 
 from rgym_exp.src.utils.name_utils import get_name_from_peer_id
+from rgym_exp.src.prg_module import PRGModule
 
 # Colorful logging
 try:
@@ -156,13 +157,18 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
         # Round counter for logging
         self.round_counter = 0
 
+        # PRG Game initialization
+        self.prg_module = PRGModule(log_dir, **kwargs)
+        self.prg_game = self.prg_module.prg_game
+
         get_logger().info(
             f"{Fore.GREEN}🚀 [SWARM MANAGER] Initialized successfully:\n"
             f"   🤖 Model: {self.model_display_name}\n"
             f"   🐾 Agent: {self.animal_name}\n"
             f"   📍 Peer ID: {self.peer_id}\n"
             f"   🔄 Starting Round: {self.state.round}\n"
-            f"   ⏰ Submit Period: {self.submit_period} hours{Style.RESET_ALL}"
+            f"   ⏰ Submit Period: {self.submit_period} hours\n"
+            f"   🎮 PRG Game: {'Enabled' if self.prg_game else 'Disabled'}{Style.RESET_ALL}"
         )
 
     def _clean_model_name(self, model_name):
@@ -311,6 +317,30 @@ class SwarmGameManager(BaseGameManager, DefaultGameManagerMixin):
             f"   💰 Pending Points: {int(self.batched_signals)}\n"
             f"   🐾 Agent: {self.animal_name}{Style.RESET_ALL}"
         )
+        
+        # PRG Game logic - keeping the original functionality
+        if self.prg_game:
+            get_logger().info(
+                f"{Fore.BLUE}🎮 [PRG GAME] Starting PRG game logic | "
+                f"Round: {self.state.round} | Agent: {self.animal_name}{Style.RESET_ALL}"
+            )
+            try:
+                # TODO: Ideally I think the judge client request question bit should come in the manager and the trainer should be doing only PyTorch-y stuff, 
+                # but I have kept it consistent with the evaluate function for now.
+                prg_history_dict = self.prg_module.prg_history_dict
+                results_dict = self.trainer.play_prg_game_logits(prg_history_dict)
+                self.prg_module.play_prg_game(results_dict, self.peer_id)
+                
+                get_logger().info(
+                    f"{Fore.GREEN}✅ [PRG GAME] PRG game completed successfully | "
+                    f"Agent: {self.animal_name}{Style.RESET_ALL}"
+                )
+            except Exception as e:
+                get_logger().error(
+                    f"{Fore.RED}❌ [PRG GAME] PRG game failed: {str(e)} | "
+                    f"Agent: {self.animal_name}{Style.RESET_ALL}"
+                )
+                get_logger().exception("PRG Game error details:")
         
         self._save_to_hf()
 
